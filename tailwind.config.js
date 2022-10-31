@@ -7,4 +7,4 @@ module.exports = {
   plugins: [],
 };
 
-/** @type {import('tailwindcss').Config} */
+// path 설정했습니다

@@ -1,19 +1,44 @@
 import React, { useState } from "react";
-import ethLightwallet from "eth-lightwallet";
+import Lightwallet from "eth-lightwallet";
 
 export const Mnemonic = () => {
   const [mnemonic, setMnemonic] = useState("");
+  const [address, setAddress] = useState("");
 
+  //비동기 처리 보류
   const test = () => {
-    let mnemonic = ethLightwallet.keystore.generateRandomSeed(); // 함수 실행후 랜덤된 12개 단어배열 얻음
+    let mnemonic = Lightwallet.keystore.generateRandomSeed(); // 함수 실행후 랜덤된 12개 단어배열 얻음
     console.log(mnemonic); // 지갑생성
     setMnemonic(mnemonic);
+    var password = prompt("Enter password for encryption", "password");
+    Lightwallet.keystore.createVault(
+      {
+        password: password,
+        seedPhrase: mnemonic,
+        hdPathString: "m/0'/0'/0'",
+      },
+      function (err, ks) {
+        ks.keyFromPassword(password, function (err, pwDerivedKey) {
+          if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
+            throw new Error("Incorrect derived key!");
+          }
 
-    // ethLightwallet.keystore.createVault({
-    //   password: "123123",
-    //   seedPhrase: mnemonic,
-    //   hdPathString: "m/0'/0'/0'",
-    // });
+          try {
+            ks.generateNewAddress(pwDerivedKey, 1);
+          } catch (err) {
+            console.log(err);
+            console.trace();
+          }
+          var address = ks.getAddresses()[0];
+          var privatekey = ks.exportPrivateKey(address, pwDerivedKey);
+
+          console.log("address and key: ", address, privatekey);
+          setAddress(address);
+        });
+      }
+    );
+
+    // var password = prompt("Enter password for encryption", "password");
   };
 
   return (
@@ -53,7 +78,8 @@ export const Mnemonic = () => {
               </button>
             </div>
           </div>
-          <p className="text-sm text-slate-1000">{mnemonic}</p>
+          <p className="text-sm text-slate-1000">Mnemonic :{mnemonic}</p>
+          <p className="text-sm text-slate-1000">Address : {address}</p>
         </form>
       </div>
     </div>
